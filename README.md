@@ -112,5 +112,5 @@ Programmet bruker følgende konsepter:
 * Ingen database
 * Enkel input-validering
 
-* ## Student: 
+## Student: 
 * Najeebullah Maroof

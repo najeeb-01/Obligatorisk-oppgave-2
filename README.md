@@ -111,3 +111,6 @@ Programmet bruker følgende konsepter:
 * Data lagres kun i minnet
 * Ingen database
 * Enkel input-validering
+
+* ## Student: 
+* Najeebullah Maroof

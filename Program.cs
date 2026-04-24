@@ -43,9 +43,46 @@ using System.Collections.Generic;
  * Feilhåndtering:
  * - Validering av brukerregistrering (alle felt må fylles ut).
  * - Try/catch rundt hovedmenyen for å fange uventede feil.
+ */
+/*
+
  *
- * Kommentarene i filen forklarer hvor hver funksjon befinner seg og hvordan den
- * brukes.
+ * 1) Autentisering og rollebasert flyt
+ *    - Felt: `Passord` i `Bruker` og innloggingsfelt i `LoggInn`.
+ *    - Formål: skille eksisterende og nye brukere, og gi hver rolle riktig
+ *      meny og tillatelser etter innlogging.
+ *    - Demo: vis registrering av student og faglærer, logg inn med hver og
+ *      demonstrer at menyvalgene endres etter rolle.
+ *
+ * 2) Kursfunksjonalitet
+ *    - `Kurs` har nå `Foreleser` og `Pensum`.
+ *    - Faglærer kan opprette kurs (duplikatsjekk), registrere pensum og
+ *      sette karakterer for deltakere i egne kurs.
+ *    - Student kan melde seg på/av kurs med kapasitets- og duplikatsjekk.
+ *    - Demo: opprett kurs som faglærer, meld student på, vis at dobbelt
+ *      påmelding blir avvist, sett karakter og vis studentens karakterliste.
+ *
+ * 3) Bibliotek og utlån
+ *    - `Bok`-modell og lister `bibliotek`, `aktiveLaan` og `historikk`.
+ *    - `Laan` binder en bok til en `Bruker` med lånedato og eventuell
+ *      retur dato.
+ *    - Funksjoner: registrere bok (bibliotekar), låne/returnere bok (alle),
+ *      og vise aktive lån/historikk (bibliotekar).
+ *    - Demo: registrer bok, lån som student, vis aktive lån, returner bok,
+ *      vis historikk.
+ *
+ * 4) Feilhåndtering og hjelpefunksjoner
+ *    - Hovedløkken er omsluttet av try/catch for å fange uventede feil.
+ *    - `ReadInt` gir trygg lesing av heltall og håndterer ugyldig input.
+ *    - Demo: prøv å registrere bruker med tomme felter (validering), og
+ *      skriv bok-id som tekst ved `ReadInt` for å vise robust feilhåndtering.
+ *
+ *  pek på et lite antall nøkkelfunksjoner
+ * (RegistrerBruker, LoggInn, OpprettKurs, MeldPaaKurs, LanBokForBruker,
+ * ReturnerBokForBruker) og forklar hva som skjer steg-for-steg. Bruk
+ * kortdemonstrasjoner i konsollen for å vise både normalflyt og en eller to
+ * feilsituasjoner (duplikat, fullt kurs, ingen eksemplarer).
+ *
  */
 
 // Bruker
@@ -183,6 +220,9 @@ public class Bok
 // Inneholder menyen og all logikk for å håndtere brukere, kurs og bibliotek.
 class Program
 {
+    // Service instance to use in tests and for separation of concerns
+    static UniversityService svc = new UniversityService();
+
     // De følgende listene fungerer som enkel in-memory lagring.
     // I en ekte applikasjon ville dette vært i en database.
     static List<Student> studenter = new List<Student>(); // lagrer registrerte studenter
@@ -192,6 +232,14 @@ class Program
     // Lån og historikk
     static List<Laan> aktiveLaan = new List<Laan>();
     static List<Laan> historikk = new List<Laan>();
+
+    // Legacy in-memory storage kept for backward compatibility with Program console flow.
+    static List<Student> legacyStudenter => studenter;
+    static List<Ansatt> legacyAnsatte => ansatte;
+    static List<Kurs> legacyKurs => kursListe;
+    static List<Bok> legacyBibliotek => bibliotek;
+    static List<Laan> legacyAktiveLaan => aktiveLaan;
+    static List<Laan> legacyHistorikk => historikk;
 
     static Bruker innloggetBruker = null; //------------ny Holder styr på hvem som er logget inn (krav: støtte innlogging)
     // ------------------ ny Hovedmenyen er nå endret til innlogging/registrering med rollebaserte menyer
@@ -303,11 +351,15 @@ class Program
                         Console.Write("Periode (fra–til): ");
                         string periode = Console.ReadLine();
 
-                        studenter.Add(new Utvekslingsstudent(sid, navn, epost, passord, hjem, land, periode));
+                        var u = new Utvekslingsstudent(sid, navn, epost, passord, hjem, land, periode);
+                        studenter.Add(u);
+                        svc.Studenter.Add(u);
                     }
                     else
                     {
-                        studenter.Add(new Student(sid, navn, epost, passord));
+                        var s = new Student(sid, navn, epost, passord);
+                        studenter.Add(s);
+                        svc.Studenter.Add(s);
                     }
                     Console.WriteLine("Student registrert.");
                     break;
@@ -317,7 +369,10 @@ class Program
                     string fid = Console.ReadLine();
                     Console.Write("Avdeling: ");
                     string favd = Console.ReadLine();
-                    ansatte.Add(new Ansatt(fid, navn, epost, passord, "faglaerer", favd)); // ------------------ ny Stilling settes automatisk til faglaerer
+                    var fa = new Ansatt(fid, navn, epost, passord, "faglaerer", favd);
+                    ansatte.Add(fa);
+                    svc.Ansatte.Add(fa);
+                    // ------------------ ny Stilling settes automatisk til faglaerer
                     Console.WriteLine("Faglærer registrert.");
                     break;
 
@@ -326,7 +381,10 @@ class Program
                     string bid = Console.ReadLine();
                     Console.Write("Avdeling: ");
                     string bavd = Console.ReadLine();
-                    ansatte.Add(new Ansatt(bid, navn, epost, passord, "bibliotekar", bavd)); // ------------------ ny Stilling settes automatisk til bibliotekar
+                    var ba = new Ansatt(bid, navn, epost, passord, "bibliotekar", bavd);
+                    ansatte.Add(ba);
+                    svc.Ansatte.Add(ba);
+                    // ------------------ ny Stilling settes automatisk til bibliotekar
                     Console.WriteLine("Bibliotekar registrert.");
                     break;
 
@@ -349,29 +407,20 @@ class Program
         Console.Write("Passord: ");
         string passord = Console.ReadLine();
 
-        // ------------------ ny Søker blant studenter for å finne match
-        foreach (var s in studenter)
+        // Use service Authenticate to make this testable
+        var bruker = svc.Authenticate(epost, passord);
+        if (bruker != null)
         {
-            if (s.Epost == epost && s.Passord == passord)
-            {
-                innloggetBruker = s; // ------------------ ny Setter innlogget bruker
+            innloggetBruker = bruker;
+            if (bruker is Student s)
                 Console.WriteLine("Logget inn som student: " + s.Navn);
-                return;
-            }
-        }
-
-        // ------------------ ny Søker blant ansatte for å finne match
-        foreach (var a in ansatte)
-        {
-            if (a.Epost == epost && a.Passord == passord)
-            {
-                innloggetBruker = a; // ------------------ ny Setter innlogget bruker
+            else if (bruker is Ansatt a)
                 Console.WriteLine("Logget inn som " + a.Stilling + ": " + a.Navn);
-                return;
-            }
         }
-
-        Console.WriteLine("Feil epost eller passord."); // ------------------ ny Feilmelding ved feil innlogging
+        else
+        {
+            Console.WriteLine("Feil epost eller passord."); // ------------------ ny Feilmelding ved feil innlogging
+        }
     }
 
     // ------------------ ny Meny for innlogget student (krav: rollebasert meny)

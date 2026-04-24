@@ -63,16 +63,19 @@ Løsningen bygger videre på objektorientert design og utvider funksjonaliteten 
 
 ## Enhetstester
 
-Prosjektet inneholder 3 enhetstester:
+Prosjektet inneholder 4 enhetstester:
 
-1. StudentOpprettes_MedRiktigeVerdier
-   Sjekker at en student opprettes korrekt og at kursliste og karakterer er tomme.
-
-2. KursPaamelding_SjekkerKapasitet
-   Sjekker at et kurs ikke kan overskride maks antall plasser.
-
-3. BokUtlaan_RedusererAntall
-   Sjekker at antall bøker reduseres ved utlån og økes ved retur.
+1. Authenticate_ReturnsUser_WhenCredentialsAreCorrect
+   Sjekker at en bruker kan logge inn med riktig epost og passord.
+   
+1. MeldPaaKurs_AddsStudentToCourse_WhenPossible
+   Sjekker at en student blir meldt på kurs når det er plass.
+   
+3. MeldPaaKurs_ReturnsFalse_WhenCourseFull
+   Sjekker at en student ikke kan melde seg på et fullt kurs.
+   
+4. LanBokForBruker_DecrementsCountAndAddsActiveLoan
+   Sjekker at antall bøker reduseres og at et lån registreres.
 
 Testene kan kjøres fra Test Explorer i Visual Studio.
 

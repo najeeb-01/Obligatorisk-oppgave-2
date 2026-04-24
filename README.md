@@ -68,7 +68,7 @@ Prosjektet inneholder 4 enhetstester:
 1. Authenticate_ReturnsUser_WhenCredentialsAreCorrect
  * Sjekker at en bruker kan logge inn med riktig epost og passord.
    
-1. MeldPaaKurs_AddsStudentToCourse_WhenPossible
+2. MeldPaaKurs_AddsStudentToCourse_WhenPossible
  * Sjekker at en student blir meldt på kurs når det er plass.
    
 3. MeldPaaKurs_ReturnsFalse_WhenCourseFull

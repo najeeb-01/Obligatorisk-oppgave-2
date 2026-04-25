@@ -16,8 +16,4 @@
     <None Remove="ObligatoriskOppgave2.Tests\**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="Obligatori sk oppgave 2.csproj" />
-  </ItemGroup>
-
 </Project>

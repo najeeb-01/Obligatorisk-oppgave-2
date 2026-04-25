@@ -66,16 +66,16 @@ Løsningen bygger videre på objektorientert design og utvider funksjonaliteten 
 Prosjektet inneholder 4 enhetstester:
 
 1. Authenticate_ReturnsUser_WhenCredentialsAreCorrect
- * Sjekker at en bruker kan logge inn med riktig epost og passord.
+  * Sjekker at en bruker kan logge inn med riktig epost og passord.
    
 2. MeldPaaKurs_AddsStudentToCourse_WhenPossible
- * Sjekker at en student blir meldt på kurs når det er plass.
+  * Sjekker at en student blir meldt på kurs når det er plass.
    
 3. MeldPaaKurs_ReturnsFalse_WhenCourseFull
-* Sjekker at en student ikke kan melde seg på et fullt kurs.
+  * Sjekker at en student ikke kan melde seg på et fullt kurs.
    
 4. LanBokForBruker_DecrementsCountAndAddsActiveLoan
- * Sjekker at antall bøker reduseres og at et lån registreres.
+  * Sjekker at antall bøker reduseres og at et lån registreres.
 
 Testene kan kjøres fra Test Explorer i Visual Studio.
 

@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <None Include="Obligatori sk oppgave 2.csproj" />
-    <None Include="Obligatorisk oppgave 2.Tests\Obligatorisk oppgave 2.Tests.csproj" />
   </ItemGroup>
 
 </Project>
